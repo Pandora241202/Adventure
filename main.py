@@ -4,19 +4,17 @@ from player import Player
 from enemy import Enemy
 from cannon import Cannon
 from object import Block
-
-SCREEN_WIDTH = 1280
-SCREEN_HEIGHT = 720
+from mapobjects import MapObjects
 
 pygame.init()
 
 SCENE_NAME_AREA = (0, 0)
-BLOCK_SIZE = 32
+BLOCK_SIZE = 64
 FONT = pygame.font.Font('freesansbold.ttf', 32)
 FPS = 60
 
 pygame.display.set_caption('Adventure Of Zero')
-screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+screen = pygame.display.set_mode((MapObjects.WIDTH, MapObjects.HEIGHT))
     
 class Scene():
     def __init__(self):
@@ -68,50 +66,66 @@ class EndScene(Scene):
 class PlayScene(Scene):
     def __init__(self):
         super().__init__()
-        self.player = Player(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, 30, 50)
+        
+        # Player
+        self.playerGroup = pygame.sprite.Group()
+        player = Player(0, MapObjects.HEIGHT - BLOCK_SIZE*3 - Player.HEIGHT + Player.BOTTOM_SPACE)
+        self.playerGroup.add(player)
         
         # Enemy
         self.enemyGroup = pygame.sprite.Group()
-        enemy = Enemy(BLOCK_SIZE*3, SCREEN_HEIGHT - BLOCK_SIZE - Enemy.HEIGHT + Enemy.FOOT_SPACE, BLOCK_SIZE*2, (SCREEN_WIDTH // (BLOCK_SIZE * 2) - 2) * BLOCK_SIZE)
+        enemy = Enemy(BLOCK_SIZE*3, MapObjects.HEIGHT - BLOCK_SIZE - Enemy.HEIGHT + Enemy.BOTTOM_SPACE, BLOCK_SIZE*2, (MapObjects.WIDTH // (BLOCK_SIZE * 2) - 2) * BLOCK_SIZE)
         self.enemyGroup.add(enemy)
         
         # Cannon
         self.cannonGroup = pygame.sprite.Group()
-        cannon = Cannon(0, SCREEN_HEIGHT - 2 * BLOCK_SIZE - Cannon.HEIGHT + Cannon.FOOT_SPACE, True)
+        cannon = Cannon(0, MapObjects.HEIGHT - 2 * BLOCK_SIZE - Cannon.HEIGHT + Cannon.BOTTOM_SPACE, True)
         self.cannonGroup.add(cannon)
-        cannon = Cannon((SCREEN_WIDTH // (BLOCK_SIZE * 2) - 2) * BLOCK_SIZE, SCREEN_HEIGHT - 2 * BLOCK_SIZE - Cannon.HEIGHT + Cannon.FOOT_SPACE, False)
+        cannon = Cannon((MapObjects.WIDTH // (BLOCK_SIZE * 2) - 2) * BLOCK_SIZE, MapObjects.HEIGHT - 2 * BLOCK_SIZE - Cannon.HEIGHT + Cannon.BOTTOM_SPACE, False)
         self.cannonGroup.add(cannon)
         
-        # generate ground
-        self.blocks = []
-        for i in range(SCREEN_WIDTH // (BLOCK_SIZE * 2)):
-            self.blocks.append(Block(i * BLOCK_SIZE, SCREEN_HEIGHT - BLOCK_SIZE, BLOCK_SIZE))
-        self.blocks.append(Block(0, SCREEN_HEIGHT - 2*BLOCK_SIZE, BLOCK_SIZE))
-        self.blocks.append(Block(BLOCK_SIZE, SCREEN_HEIGHT - 2*BLOCK_SIZE, BLOCK_SIZE))
-        self.blocks.append(Block((SCREEN_WIDTH // (BLOCK_SIZE * 2) - 1) * BLOCK_SIZE, SCREEN_HEIGHT - 2*BLOCK_SIZE, BLOCK_SIZE))
-        self.blocks.append(Block((SCREEN_WIDTH // (BLOCK_SIZE * 2) - 2) * BLOCK_SIZE, SCREEN_HEIGHT - 2*BLOCK_SIZE, BLOCK_SIZE))
+        # Map Objects
+        self.mapObjects = MapObjects(
+            [[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+             [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+             [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+             [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,2,0,2,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+             [0,0,0,0,0,0,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+             [0,0,0,0,0,0,0,0,0,0,0,2,2,1,2,1,0,0,2,4,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+             [0,0,0,0,0,0,0,0,0,3,2,1,1,1,1,2,2,2,1,6,0,0,1,0,0,0,3,2,2,2,2,2,2,2,2,2,4,0,0,2],
+             [3,2,2,2,2,2,2,2,2,1,1,1,1,1,1,1,1,1,1,6,0,0,1,0,0,0,5,1,1,1,1,1,1,1,1,1,6,0,0,1],
+             [5,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,6,0,0,1,0,0,0,5,1,1,1,1,1,1,1,1,1,6,0,0,1],
+             [5,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,6,0,0,1,0,0,0,5,1,1,1,1,1,1,1,1,1,6,0,0,1],
+             [5,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,6,0,0,1,0,0,0,5,1,1,1,1,1,1,1,1,1,6,0,0,1],]
+        )
+        
+        # Scroll map
+        self.scrollX = 0
+        self.scrollY = 0
+        self.cameraX = MapObjects.WIDTH - MapObjects.SCROLL_THRESHOLD_X
+        self.cameraY = MapObjects.HEIGHT - MapObjects.SCROLL_THRESHOLD_Y
             
     def next_scene(self):
         return EndScene()
 
     def update(self, inputs):
-        self.player.update(inputs, self.blocks)
-        self.enemyGroup.update(self.player)
-        self.cannonGroup.update()
+        (scrollX, scrollY) = self.playerGroup.sprites()[0].update(inputs, self.mapObjects.blockGroup.sprites())
+        self.enemyGroup.update(self.playerGroup.sprites()[0])
+        self.cannonGroup.update(self.playerGroup.sprites()[0])
         for cannon in self.cannonGroup.sprites():
-            cannon.cannonBallGroup.update(self.player)
+            cannon.cannonBallGroup.update(self.playerGroup.sprites()[0])       
+        self.mapObjects.update(scrollX, scrollY)
     
     def render(self):
         screen.fill((255, 255, 255))
-        # Draw the blocks
-        for block in self.blocks:
-            block.draw(screen)
+        # Draw map scene
+        self.mapObjects.draw(screen)
         # Draw the player 
-        self.player.draw(screen)
-        self.enemyGroup.draw(screen)
-        self.cannonGroup.draw(screen)
-        for cannon in self.cannonGroup.sprites():
-            cannon.cannonBallGroup.draw(screen)
+        self.playerGroup.draw(screen)
+        # self.enemyGroup.draw(screen)
+        # self.cannonGroup.draw(screen)
+        # for cannon in self.cannonGroup.sprites():
+        #     cannon.cannonBallGroup.draw(screen)
 
         scene_name = FONT.render('Play Scene', True, (0, 0, 0))
         screen.blit(scene_name, SCENE_NAME_AREA)
