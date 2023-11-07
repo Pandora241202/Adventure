@@ -7,7 +7,7 @@ class AnimInfo():
        self.startFrame = startFrame
        self.numFrames = numFrames 
   
-class CannonBall(Object, pygame.sprite.Sprite):
+class CannonBall(pygame.sprite.Sprite, Object):
     
     YTOCANNONY = 8 # sPACE BETWEEN y of cannon ball to y of cannon
     XTOCANNONX = -16 # sPACE BETWEEN y of cannon ball to y of cannon
@@ -20,7 +20,7 @@ class CannonBall(Object, pygame.sprite.Sprite):
     EXPLODE_STATE = 1  
     
     def __init__(self, x, y, isFacingRight):
-        super().__init__(x, y, self.WIDTH, self.HEIGHT, 'CannonBall')
+        super().__init__()
         
         self.sprites = []
         self.sprites.append(pygame.image.load(os.path.join('Assets\Cannon', 'Cannon Ball Idle/1.png')))
@@ -84,7 +84,7 @@ class CannonBall(Object, pygame.sprite.Sprite):
     def collide_player(self, player):
         return pygame.sprite.collide_rect(self, player)
            
-class Cannon(Object, pygame.sprite.Sprite):   
+class Cannon(pygame.sprite.Sprite, Object):   
     
     SHOOTING_FRAME_RATE = 120
     SHOOTING_RANGE = 400
@@ -98,7 +98,7 @@ class Cannon(Object, pygame.sprite.Sprite):
     DEAD_STATE = 3
     
     def __init__(self, x, y, isFacingRight):
-        super().__init__(x, y, self.WIDTH, self.HEIGHT, 'Cannon')
+        super().__init__()
         
         self.sprites = []
         self.sprites.append(pygame.image.load(os.path.join('Assets\Cannon', 'Cannon Idle/1.png')))

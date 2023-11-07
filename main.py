@@ -12,9 +12,13 @@ SCENE_NAME_AREA = (0, 0)
 BLOCK_SIZE = 64
 FONT = pygame.font.Font('freesansbold.ttf', 32)
 FPS = 60
+SCREEN_WIDTH = 1280
+SCREEN_HEIGHT = 640
+SCROLL_THRESHOLD_X = 768
+SCROLL_THRESHOLD_Y = 300
 
 pygame.display.set_caption('Adventure Of Zero')
-screen = pygame.display.set_mode((MapObjects.WIDTH, MapObjects.HEIGHT))
+screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
     
 class Scene():
     def __init__(self):
@@ -69,19 +73,19 @@ class PlayScene(Scene):
         
         # Player
         self.playerGroup = pygame.sprite.Group()
-        player = Player(0, MapObjects.HEIGHT - BLOCK_SIZE*3 - Player.HEIGHT + Player.BOTTOM_SPACE)
+        player = Player(0, SCREEN_HEIGHT - BLOCK_SIZE*3 - Player.HEIGHT + Player.BOTTOM_SPACE)
         self.playerGroup.add(player)
         
         # Enemy
         self.enemyGroup = pygame.sprite.Group()
-        enemy = Enemy(BLOCK_SIZE*3, MapObjects.HEIGHT - BLOCK_SIZE - Enemy.HEIGHT + Enemy.BOTTOM_SPACE, BLOCK_SIZE*2, (MapObjects.WIDTH // (BLOCK_SIZE * 2) - 2) * BLOCK_SIZE)
+        enemy = Enemy(BLOCK_SIZE*3, SCREEN_HEIGHT - BLOCK_SIZE*3 - Enemy.HEIGHT + Enemy.BOTTOM_SPACE, BLOCK_SIZE*2, (SCREEN_WIDTH // (BLOCK_SIZE * 2) - 2) * BLOCK_SIZE)
         self.enemyGroup.add(enemy)
         
         # Cannon
         self.cannonGroup = pygame.sprite.Group()
-        cannon = Cannon(0, MapObjects.HEIGHT - 2 * BLOCK_SIZE - Cannon.HEIGHT + Cannon.BOTTOM_SPACE, True)
+        cannon = Cannon(0, SCREEN_HEIGHT - 2 * BLOCK_SIZE - Cannon.HEIGHT + Cannon.BOTTOM_SPACE, True)
         self.cannonGroup.add(cannon)
-        cannon = Cannon((MapObjects.WIDTH // (BLOCK_SIZE * 2) - 2) * BLOCK_SIZE, MapObjects.HEIGHT - 2 * BLOCK_SIZE - Cannon.HEIGHT + Cannon.BOTTOM_SPACE, False)
+        cannon = Cannon((SCREEN_WIDTH // (BLOCK_SIZE * 2) - 2) * BLOCK_SIZE, SCREEN_HEIGHT - 2 * BLOCK_SIZE - Cannon.HEIGHT + Cannon.BOTTOM_SPACE, False)
         self.cannonGroup.add(cannon)
         
         # Map Objects
@@ -91,8 +95,8 @@ class PlayScene(Scene):
              [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
              [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,2,0,2,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
              [0,0,0,0,0,0,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-             [0,0,0,0,0,0,0,0,0,0,0,2,2,1,2,1,0,0,2,4,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-             [0,0,0,0,0,0,0,0,0,3,2,1,1,1,1,2,2,2,1,6,0,0,1,0,0,0,3,2,2,2,2,2,2,2,2,2,4,0,0,2],
+             [0,0,0,0,0,0,0,0,0,0,0,3,2,1,2,4,0,0,3,4,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+             [0,0,0,0,0,0,0,0,0,3,2,1,1,1,1,1,2,2,1,6,0,0,1,0,0,0,3,2,2,2,2,2,2,2,2,2,4,0,0,2],
              [3,2,2,2,2,2,2,2,2,1,1,1,1,1,1,1,1,1,1,6,0,0,1,0,0,0,5,1,1,1,1,1,1,1,1,1,6,0,0,1],
              [5,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,6,0,0,1,0,0,0,5,1,1,1,1,1,1,1,1,1,6,0,0,1],
              [5,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,6,0,0,1,0,0,0,5,1,1,1,1,1,1,1,1,1,6,0,0,1],
@@ -100,17 +104,16 @@ class PlayScene(Scene):
         )
         
         # Scroll map
-        self.scrollX = 0
-        self.scrollY = 0
-        self.cameraX = MapObjects.WIDTH - MapObjects.SCROLL_THRESHOLD_X
-        self.cameraY = MapObjects.HEIGHT - MapObjects.SCROLL_THRESHOLD_Y
+        self.cameraX = SCREEN_WIDTH - SCROLL_THRESHOLD_X
+        self.cameraY = SCREEN_HEIGHT - SCROLL_THRESHOLD_Y
             
     def next_scene(self):
         return EndScene()
 
     def update(self, inputs):
+        (scrollX , scrollY) = (0, 0)
         (scrollX, scrollY) = self.playerGroup.sprites()[0].update(inputs, self.mapObjects.blockGroup.sprites())
-        self.enemyGroup.update(self.playerGroup.sprites()[0])
+        self.enemyGroup.update(self.playerGroup.sprites()[0], scrollX, scrollY)
         self.cannonGroup.update(self.playerGroup.sprites()[0])
         for cannon in self.cannonGroup.sprites():
             cannon.cannonBallGroup.update(self.playerGroup.sprites()[0])       
@@ -122,7 +125,8 @@ class PlayScene(Scene):
         self.mapObjects.draw(screen)
         # Draw the player 
         self.playerGroup.draw(screen)
-        # self.enemyGroup.draw(screen)
+        # Draw enemy
+        self.enemyGroup.draw(screen)
         # self.cannonGroup.draw(screen)
         # for cannon in self.cannonGroup.sprites():
         #     cannon.cannonBallGroup.draw(screen)

@@ -25,14 +25,13 @@ class RayCast2D():
     def collide_player(self, player):
         playerX = player.rect.x
         playerY = player.rect.y
-        if playerY + player.HEIGHT != self.y + Enemy.HEIGHT - Enemy.BOTTOM_SPACE:
+        if playerY + player.HEIGHT - player.BOTTOM_SPACE != self.y + Enemy.HEIGHT - Enemy.BOTTOM_SPACE:
             return False
         if self.isFacingRight:
-            print(self.x,self.length)
             return playerX >= self.x and playerX < self.x + self.length
         return playerX + player.WIDTH > self.x - self.length and playerX + player.WIDTH <= self.x  
                  
-class Enemy(Object, pygame.sprite.Sprite):   
+class Enemy(pygame.sprite.Sprite, Object):   
     
     PATROL_SPEED = 1
     ATTACK_SPEED = 7
@@ -48,7 +47,7 @@ class Enemy(Object, pygame.sprite.Sprite):
     DEAD_STATE = 3
     
     def __init__(self, x, y, flipPoint1, flipPoint2):
-        super().__init__(x, y, self.WIDTH, self.HEIGHT, 'Enemy')
+        super().__init__()
         self.frame_count_change_speed = -1
         
         self.sprites = []
@@ -94,14 +93,9 @@ class Enemy(Object, pygame.sprite.Sprite):
         self.hp = 2
         self.mask = pygame.mask.from_surface(self.image)
 
-    def update(self, player):
+    def update(self, player, scrollX, scrollY):
         # Create mask to detect collision
         self.mask = pygame.mask.from_surface(self.image)
-        
-        # Update camera
-        # self.update_camera(player.velocity.x, player.move_camera)
-        self.update_flip_points_camera(player.velocity.x, player.move_camera)
-        self.update_raycast_2d_camera(player.move_camera)
         
         self.move()
 
@@ -132,6 +126,9 @@ class Enemy(Object, pygame.sprite.Sprite):
                     if self.frame_count_change_speed % self.FRAME_RATE_CHANGE_SPEED == 0:   
                         self.velocity.x += 1 if self.isFacingRight else -1
                     self.frame_count_change_speed += 1
+        
+        # Update by camera
+        self.update_camera(scrollX, scrollY)
         
         # Animation
         if self.frameCount % 10 == 0:
@@ -171,15 +168,12 @@ class Enemy(Object, pygame.sprite.Sprite):
         self.frameCount = 0
         self.frame_count_change_speed = 0
     
-    def update_flip_points_camera(self, player_velocity_x, move_camera):
-        if move_camera:
-            self.flipPoint1 -= player_velocity_x
-            self.flipPoint2 -= player_velocity_x
-      
-    def update_raycast_2d_camera(self, move_camera):
-        if move_camera:
-            self.rayCast2d.change_x(self.rect.x, self.flipPoint1, self.flipPoint2)
-          
+    def update_camera(self, scrollX, scrollY):
+        super().update_camera(scrollX, scrollY)
+        self.flipPoint1 += scrollX
+        self.flipPoint2 += scrollY
+        self.rayCast2d.change_x(self.rect.x, self.flipPoint1, self.flipPoint2)
+                      
     def take_dmg(self, dmg): # Immune when being taken dmg
         if self.state != self.TAKE_DMG_STATE:
             self.state = self.TAKE_DMG_STATE
