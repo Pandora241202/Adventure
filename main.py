@@ -1,5 +1,7 @@
 import pygame
 import os
+from os import environ
+environ['PYGAME_HIDE_SUPPORT_PROMPT'] = '1'
 from player import Player
 from enemy import Enemy
 from cannon import Cannon
